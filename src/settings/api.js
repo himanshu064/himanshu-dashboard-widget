@@ -25,7 +25,7 @@ const application = {};
 const backofficeApi = {};
 
 // Add getter/setter to lazily initialize
-Object.defineProperty(application, '_instance', {
+Object.defineProperty(application, "_instance", {
   get() {
     if (!_application) {
       _application = initializeApi();
@@ -34,7 +34,7 @@ Object.defineProperty(application, '_instance', {
   }
 });
 
-Object.defineProperty(backofficeApi, '_instance', {
+Object.defineProperty(backofficeApi, "_instance", {
   get() {
     if (!_backoffice) {
       _backoffice = initializeBackoffice();
@@ -46,7 +46,7 @@ Object.defineProperty(backofficeApi, '_instance', {
 // Proxy to forward all method calls to the lazily-initialized instance
 const handler = {
   get(target, prop) {
-    if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+    if (prop === "then" || prop === "catch" || prop === "finally") {
       return undefined; // Not a promise
     }
     return target._instance[prop];
