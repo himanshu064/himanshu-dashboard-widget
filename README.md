@@ -56,7 +56,7 @@ yarn build
 
 ## GitHub Actions Setup
 
-This repository uses GitHub Actions for CI/CD. To set up the workflow:
+This repository uses GitHub Actions for CI/CD with automatic versioning. To set up the workflow:
 
 1. Go to your GitHub repository settings
 2. Navigate to **Settings > Secrets and variables > Actions**
@@ -64,10 +64,28 @@ This repository uses GitHub Actions for CI/CD. To set up the workflow:
    - Name: `TELESERO_NPM_TOKEN`
    - Value: Your Telesero npm registry token
 
+### Automatic Versioning
+
+The workflow uses **Conventional Commits** for automatic version bumping:
+
+- `fix:` commits → Patch version bump (1.0.0 → 1.0.1)
+- `feat:` commits → Minor version bump (1.0.0 → 1.1.0)
+- `feat!:` or `BREAKING CHANGE:` → Major version bump (1.0.0 → 2.0.0)
+
+**Example commit messages:**
+```bash
+git commit -m "fix: resolve build error with ES6 syntax"
+git commit -m "feat: add new dashboard widget component"
+git commit -m "feat!: redesign widget API (breaking change)"
+```
+
 The workflow will automatically:
 - Run tests on all pushes and pull requests
+- Bump version based on commit messages
+- Create git tags (v1.0.18, v1.0.19, etc.)
 - Build the package on master branch
-- Upload build artifacts (accessible from Actions tab)
+- Create GitHub releases with changelog
+- Upload build artifacts to the release
 
 ## License
 
