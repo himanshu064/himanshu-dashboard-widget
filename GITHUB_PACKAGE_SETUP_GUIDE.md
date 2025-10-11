@@ -573,7 +573,7 @@ git push origin main --tags
 
 ## CDN Deployment
 
-### Setup CDN via SFTP
+### Setup CDN via FTP
 
 Your built files will be automatically uploaded to your CDN server after each successful build.
 
@@ -581,10 +581,12 @@ Your built files will be automatically uploaded to your CDN server after each su
 
 Add these secrets to your GitHub repository (**Settings → Secrets and variables → Actions**):
 
-1. **SFTP_USERNAME**: `hellovoip.co_lp6xlfukm7k`
-2. **SFTP_SERVER**: `144.217.255.195`
-3. **SFTP_PORT**: `21`
-4. **SFTP_PASSWORD**: Your SFTP password
+1. **SFTP_USERNAME**: Your FTP username (e.g., `hellovoip.co_lp6xlfukm7k`)
+2. **SFTP_SERVER**: Your server IP or domain (e.g., `144.217.255.195`)
+3. **SFTP_PORT**: Your FTP port (usually `21`)
+4. **SFTP_PASSWORD**: Your FTP password
+
+**Note:** Despite the "SFTP" prefix in secret names, we're using standard FTP protocol since your hosting uses FTP on port 21.
 
 #### CDN URLs
 
@@ -726,7 +728,7 @@ If you later get SSH access and want to use the Telesero approach:
 | Date | Changes |
 |------|---------|
 | 2025-10-11 | Initial guide created with webpack configuration fixes |
-| 2025-10-11 | Added CDN deployment via SFTP |
+| 2025-10-11 | Added CDN deployment via FTP (switched from SFTP due to hosting compatibility) |
 
 ---
 

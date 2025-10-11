@@ -106,14 +106,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy to CDN via SFTP
+      - name: Deploy to CDN via FTP
         if: ${{ steps.bump.outputs.skipped != 'true' }}
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          username: ${{ secrets.SFTP_USERNAME }}
           server: ${{ secrets.SFTP_SERVER }}
-          port: ${{ secrets.SFTP_PORT }}
+          username: ${{ secrets.SFTP_USERNAME }}
           password: ${{ secrets.SFTP_PASSWORD }}
-          local_path: './dist/*'
-          remote_path: '/httpdocs/himanshu-dashboard-widget/v${{ steps.bump.outputs.version }}'
-          sftp_only: true
+          port: ${{ secrets.SFTP_PORT }}
+          local-dir: ./dist/
+          server-dir: /httpdocs/himanshu-dashboard-widget/v${{ steps.bump.outputs.version }}/
+          dangerous-clean-slate: false
