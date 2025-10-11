@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import { setAdvertisedPages } from "./store/advertised-pages";
 import WidgetComponent from "./Widget";
 
 // Global config that can be accessed by your widget components
@@ -11,7 +12,7 @@ export function WidgetLoader(options = {}) {
     containerId = "dashboard-widget-container",
     config = {},
     onLoad = () => {},
-    onError = (error) => console.error("Dashboard Widget Error:", error),
+    onError = (error) => console.error("Dashboard Widget Error:", error)
   } = options;
 
   try {
@@ -28,7 +29,7 @@ export function WidgetLoader(options = {}) {
         "🔧 Setting advertised pages from config...",
         config.advertisedPages
       );
-      const { setAdvertisedPages } = require("./store/advertised-pages");
+      // const { setAdvertisedPages } = require("./store/advertised-pages");
       setAdvertisedPages(config.advertisedPages);
     }
 
@@ -48,7 +49,7 @@ export function WidgetLoader(options = {}) {
 
 // Export API object similar to widget-base pattern
 export const api = {
-  DashboardLoader: WidgetLoader,
+  DashboardLoader: WidgetLoader
 };
 
 // Export for advanced usage

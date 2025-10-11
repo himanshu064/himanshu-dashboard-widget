@@ -5,6 +5,7 @@ import { hooks } from "@telesero/frontend-common";
 import { getUIConfigurations } from "../services/configurations";
 import { setUIConfigurations } from "../store/dashboardConfig";
 import UIConfiguration from "../containers/UIConfiguration/UIConfiguration";
+import "../settings/metrics";
 
 const { promise } = utils;
 const createCancelToken = promise.createCancelToken;
@@ -12,7 +13,7 @@ const createCancelToken = promise.createCancelToken;
 const { useAsyncCallback } = hooks;
 
 // import metrics for common dashboard
-require("../settings/metrics");
+// require("../settings/metrics");
 
 const DashboardProvider = ({ children }) => {
   const cancelToken = React.useRef(createCancelToken());
