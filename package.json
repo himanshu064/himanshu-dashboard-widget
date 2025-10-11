@@ -1,7 +1,13 @@
 {
   "name": "@himanshu064/himanshu-dashboard-widget",
   "version": "1.0.1",
-  "repository": "github:himanshu064/himanshu-dashboard-widget",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/himanshu064/himanshu-dashboard-widget.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "private": false,
   "license": "proprietary",
   "module": "src/index.js",

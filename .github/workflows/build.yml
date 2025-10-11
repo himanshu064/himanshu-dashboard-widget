@@ -106,6 +106,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Publish to GitHub Packages
+        if: ${{ steps.bump.outputs.skipped != 'true' }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > .npmrc
+          echo "@himanshu064:registry=https://npm.pkg.github.com" >> .npmrc
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Deploy to CDN via FTP
         if: ${{ steps.bump.outputs.skipped != 'true' }}
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
