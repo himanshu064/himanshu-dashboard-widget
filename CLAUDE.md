@@ -44,9 +44,48 @@ yarn add @himanshu064/himanshu-dashboard-widget
 
 ## Usage Methods
 
-### Method 1: ES Module Import (Modern Apps)
+### Method 1: AMD/RequireJS (Production - Backoffice/CRM)
 
-Use this method if your application uses webpack, vite, or any modern bundler.
+This is the **PRIMARY** method used in production environments (backoffice-frontend, crm-frontend).
+
+The widget is loaded from CDN via AMD/RequireJS after `telesero-base` is loaded:
+
+```javascript
+// Automatically configured in index.ejs
+require.config({
+  paths: {
+    "dashboard-widget": "https://cdn.cxcl.io/telekit/dashboard-widget-1.0.8"
+  }
+});
+
+// Load and initialize the widget
+require(["dashboard-widget"], function(dashboardWidget) {
+  dashboardWidget.WidgetLoader({
+    containerId: "dashboard-widget-container",
+    config: {
+      advertisedPages: [
+        { id: "page1", name: "Page 1" }
+      ]
+    },
+    onLoad: function() {
+      console.log("Widget loaded successfully!");
+    },
+    onError: function(error) {
+      console.error("Widget failed to load:", error);
+    }
+  });
+});
+```
+
+**How it works in production:**
+1. `index.ejs` loads `telesero-base.js` from CDN (contains React, styled-components)
+2. `index.ejs` configures RequireJS paths to load `dashboard-widget` from CDN
+3. Application code uses `window.teleseroAMD.require(["dashboard-widget"])` to load the widget
+4. Widget uses dependencies from `telesero-base` (no duplicate React)
+
+### Method 2: ES Module Import (Development - Storybook/Testing)
+
+Use this method for local development, Storybook, and testing.
 
 ```javascript
 import { WidgetLoader, api, Widget } from "@himanshu064/himanshu-dashboard-widget";
@@ -74,30 +113,39 @@ WidgetLoader({
 - `api` - API object containing `DashboardLoader` (alias for `WidgetLoader`)
 - `Widget` - The raw React component for advanced usage
 
-### Method 2: AMD/RequireJS (Legacy Apps)
+### Method 3: Dual Loading (Recommended for application-frontend-framework)
 
-Use this method if your application uses RequireJS or AMD module system.
+For `application-frontend-framework` (telekit), use this pattern to support both AMD (production) and ES modules (development):
 
 ```javascript
-require(["dashboard-widget"], function(dashboardWidget) {
-  dashboardWidget.WidgetLoader({
-    containerId: "dashboard-widget-container",
-    config: {
-      advertisedPages: [
-        { id: "page1", name: "Page 1" }
-      ]
-    },
-    onLoad: function() {
-      console.log("Widget loaded successfully!");
-    },
-    onError: function(error) {
-      console.error("Widget failed to load:", error);
+import React from "react";
+
+const Dashboard = () => {
+  React.useEffect(() => {
+    // Check if AMD environment is available (production)
+    if (typeof window.teleseroAMD !== "undefined" && window.teleseroAMD.require) {
+      // Production: Load via AMD
+      window.teleseroAMD.require(["dashboard-widget"], (module) => {
+        module.WidgetLoader({ /* config */ });
+      });
+    } else {
+      // Development: Load via ES modules
+      import("@himanshu064/himanshu-dashboard-widget")
+        .then((module) => {
+          module.WidgetLoader({ /* config */ });
+        });
     }
-  });
-});
+  }, []);
+
+  return <div id="dashboard-widget-container" />;
+};
 ```
 
-**Alternative: Using the Global Helper**
+This pattern ensures:
+- **Production (backoffice/crm)**: Uses AMD from CDN, shares React from telesero-base
+- **Development (Storybook)**: Uses ES modules from node_modules, works without AMD
+
+### Method 4: Standalone (Direct Script Tag)
 
 The standalone build (`dist/widgets.js`) also exposes a global helper:
 
@@ -186,6 +234,118 @@ The build process generates the following files in the `dist/` directory:
    - Combines `telesero-base.js` + `dashboard-widget.js` + helpers
    - Creates `widgets.js` with global `TeleseroWidgetLoader`
 
+## Architecture Overview
+
+### Production Architecture (Backoffice/CRM)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Backoffice/CRM Frontend                                     │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ index.ejs (Generated from application-frontend-      │  │
+│  │             framework/build-tools/index.ejs)         │  │
+│  │                                                       │  │
+│  │  1. Loads telesero-base.js from CDN                  │  │
+│  │     - Contains: React, ReactDOM, styled-components   │  │
+│  │     - Wrapped in AMD (window.teleseroAMD)           │  │
+│  │                                                       │  │
+│  │  2. Configures RequireJS paths:                      │  │
+│  │     - widget-base -> CDN                             │  │
+│  │     - dashboard-widget -> CDN                        │  │
+│  │                                                       │  │
+│  │  3. Loads widget-base via AMD                        │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Application Code (from application-frontend-         │  │
+│  │                   framework)                          │  │
+│  │                                                       │  │
+│  │  Dashboard Component:                                 │  │
+│  │    - Detects window.teleseroAMD                      │  │
+│  │    - Loads dashboard-widget via AMD                  │  │
+│  │    - Shares React from telesero-base                 │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Development Architecture (Storybook/Local)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Application Frontend Framework (Local Development)         │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Storybook / Development Server                        │  │
+│  │                                                       │  │
+│  │  - No teleseroAMD available                          │  │
+│  │  - Uses webpack/bundler for dependencies             │  │
+│  └──────────────────────────────────────────────────────┘  │
+│                                                             │
+│  ┌──────────────────────────────────────────────────────┐  │
+│  │ Dashboard Component:                                  │  │
+│  │    - Detects no AMD environment                      │  │
+│  │    - Falls back to ES module import                  │  │
+│  │    - Loads from node_modules                         │  │
+│  │      @himanshu064/himanshu-dashboard-widget          │  │
+│  └──────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Deployment Workflow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Dashboard Widget Repository                                 │
+│  (himanshu-dashboard-widget)                               │
+│                                                             │
+│  1. npm run build                                          │
+│     ├─> webpack (ES → AMD)                                 │
+│     ├─> requirejs optimizer                                │
+│     └─> Creates dist/dashboard-widget.js                   │
+│                                                             │
+│  2. Publish to GitHub Packages (for development)           │
+│     npm publish                                            │
+│                                                             │
+│  3. Upload to CDN (for production)                         │
+│     dist/dashboard-widget.js →                             │
+│       https://cdn.cxcl.io/telekit/                         │
+│         dashboard-widget-{version}.js                      │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Application Frontend Framework                              │
+│  (application-frontend-framework)                          │
+│                                                             │
+│  1. Update build-tools/index.ejs                           │
+│     - Add dashboard-widget version                         │
+│     - Configure RequireJS path                             │
+│                                                             │
+│  2. Dashboard component uses dual loading:                 │
+│     - Production: AMD from CDN                             │
+│     - Development: ES modules from node_modules            │
+│                                                             │
+│  3. Build telekit package                                  │
+│     npm run dist                                           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ Backoffice/CRM Frontend                                     │
+│                                                             │
+│  1. Install updated telekit:                               │
+│     npm install @telesero/telekit@latest                   │
+│                                                             │
+│  2. Build generates index.html with:                       │
+│     - telesero-base from CDN                               │
+│     - widget-base from CDN                                 │
+│     - dashboard-widget from CDN                            │
+│                                                             │
+│  3. Deploy to production                                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
 ## Architecture
 
 ### File Structure
@@ -272,19 +432,39 @@ The package provides multiple entry points for different use cases:
 
 ## Publishing
 
-The package is published to GitHub Packages:
+The package needs to be published in TWO places for different use cases:
+
+### 1. GitHub Packages (for development/npm install)
 
 ```bash
 # Ensure you're authenticated to GitHub Packages
 npm login --registry=https://npm.pkg.github.com --scope=@himanshu064
 
-# Publish the package
+# Build and publish
+npm run build
 npm publish
 ```
 
 **Note**: The `files` field in package.json controls what gets published:
 - `dist/` - Pre-built AMD modules
 - `src/` - Source files for ES module imports
+
+### 2. CDN Deployment (for production AMD loading)
+
+The `dist/dashboard-widget.js` file needs to be uploaded to your CDN:
+
+```bash
+# After building
+npm run build
+
+# Upload to CDN (example using your CDN process)
+# Upload: dist/dashboard-widget.js
+# To: https://cdn.cxcl.io/telekit/dashboard-widget-1.0.8.js
+```
+
+**Important**: The AMD build (`dist/dashboard-widget.js`) is wrapped in AMD format and depends on:
+- `telesero-base` (provides React, styled-components, Material-UI)
+- These dependencies are loaded via RequireJS in production
 
 ## Common Issues & Troubleshooting
 
