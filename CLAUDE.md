@@ -247,16 +247,28 @@ The package provides multiple entry points for different use cases:
 
 ```json
 {
-  "main": "dist/dashboard-widget.js",    // CommonJS/AMD (bundled)
+  "main": "src/index.js",                // Primary entry (ES modules)
   "module": "src/index.js",              // ES modules (source)
-  "types": "src/index.d.ts"              // TypeScript definitions
+  "browser": "dist/widgets.js",          // Standalone browser build
+  "types": "src/index.d.ts",             // TypeScript definitions
+  "exports": {
+    ".": {
+      "import": "./src/index.js",        // ES import
+      "require": "./src/index.js",       // CommonJS require
+      "default": "./src/index.js"        // Default fallback
+    },
+    "./dist/*": "./dist/*",              // Access dist files directly
+    "./amd": "./dist/dashboard-widget.js",    // AMD module
+    "./standalone": "./dist/widgets.js"       // Standalone bundle
+  }
 }
 ```
 
 **Entry Point Usage:**
-- Modern bundlers (webpack 5+, vite) will use `module` (tree-shakeable source)
-- Legacy bundlers will use `main` (pre-built AMD module)
-- RequireJS will load `dashboard-widget` directly from AMD registry
+- **Default import** (`import from "@himanshu064/himanshu-dashboard-widget"`): Uses `src/index.js` (ES modules)
+- **AMD/RequireJS**: Import via `require(["dashboard-widget"])` or use `@himanshu064/himanshu-dashboard-widget/amd`
+- **Standalone browser**: Use `@himanshu064/himanshu-dashboard-widget/standalone` or `dist/widgets.js`
+- **Direct dist access**: Import specific dist files via `@himanshu064/himanshu-dashboard-widget/dist/...`
 
 ## Publishing
 
@@ -298,6 +310,23 @@ Error: Cannot find module '@himanshu064/himanshu-dashboard-widget'
 1. Verify your `.npmrc` has the GitHub Packages registry configured
 2. Authenticate with GitHub Packages
 3. Reinstall the package
+
+### Issue: Importing `__esModule` or wrong exports
+
+```
+import { __esModule } from "@himanshu064/himanshu-dashboard-widget";
+// Getting dist/dashboard-widget.js instead of src/index.js
+```
+
+**Solution**: This was fixed in the package configuration. The bundler was resolving to the AMD build instead of the source. The fix:
+1. Changed `"main"` from `"dist/dashboard-widget.js"` to `"src/index.js"`
+2. Added `"exports"` field to explicitly map import paths
+3. Set `"browser"` field to `"dist/widgets.js"` for standalone usage
+
+**After the fix, you need to:**
+1. Rebuild and republish the widget package (bump version to 1.0.8+)
+2. Update the widget in your consuming application: `npm install @himanshu064/himanshu-dashboard-widget@latest`
+3. Clear your bundler cache if needed
 
 ### Issue: RequireJS cannot load module
 
