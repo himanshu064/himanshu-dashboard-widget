@@ -12,7 +12,6 @@
   "license": "proprietary",
   "main": "src/index.js",
   "module": "src/index.js",
-  "browser": "dist/widgets.js",
   "types": "src/index.d.ts",
   "exports": {
     ".": {
